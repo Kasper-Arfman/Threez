@@ -103,8 +103,8 @@ class GameOverScreen(Screen):
         
 class ThreezGame(BoxLayout):
     N = 12
-    FALSE_ENTRY_PENALTY = 10
-    HINT_PENALTY = 5
+    FALSE_ENTRY_PENALTY = 5
+    HINT_PENALTY = 3
     score = NumericProperty(0)
     hiscore = NumericProperty(0)
     time = NumericProperty(GAME_TIME)
