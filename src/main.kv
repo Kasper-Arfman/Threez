@@ -1,0 +1,90 @@
+#:kivy 2.1.0
+<HomeScreen>:
+    CustomButton:
+        text: 'Start Playing'
+        background_color: 130/255, 200/255, 130/255, 1
+        on_press: root.start_game()
+
+<ThreezScreen>:
+    ThreezGame:
+        id: threez_game
+
+<GameOverScreen>:
+    CustomButton:
+        text: 'Go Home'
+        background_color: 140/255, 20/255, 1/255, 1
+        on_press: root.to_home_screen()
+
+
+<ThreezGame>:
+    id: mainscreen
+    orientation: 'vertical'
+
+    BoxLayout:
+        id: header
+        orientation: "vertical"
+        size_hint: 1, None
+        size: -1, 70
+        BoxLayout:
+            orientation: 'horizontal'
+
+            Label:
+                text: "Score: {:.0f}".format(root.score)
+
+            Label:
+                text: "Hiscore: {:.0f}".format(max(root.score, root.hiscore))
+
+        Label:
+            text: "Time remaining: {:.0f}".format(root.time)
+
+    BoxLayout:
+        GridLayout:
+            id: field
+            card_aspect: 88/63
+            cols: 4
+            size_hint: 1, None
+            size: self.parent.size[0], self.parent.size[0] * self.card_aspect * 12 / self.cols**2
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            Tile:
+            Tile:
+            Tile:
+            Tile:
+            Tile:
+            Tile:
+            Tile:
+            Tile:
+            Tile:
+            Tile:
+            Tile:
+            Tile:
+
+    BoxLayout:
+        id: footer
+        orientation: "horizontal"
+        size_hint: 1, None
+        size: -1, 100
+
+        CustomButton:
+            text: 'Hint'
+            background_color: 255/255, 180/255, 0/255, 1
+            on_press: root.hint()
+
+        CustomButton:
+            text: 'Clear'
+            background_color: 100/255, 100/255, 100/255, 1
+            on_press: root.deselect_all()
+
+        CustomButton:
+            text: 'OK'
+            background_color: 10/255, 204/255, 30/255, 1
+            on_press: root.enter()
+
+<Tile@ToggleButton>:
+    opacity: 1.0 if not self.selected else 0.5
+    state: 'down' if self.selected else 'normal'
+
+<CustomButton@Button>:
+    background_normal: ""
+    background_down: ""
+    opacity: 1.0 if self.state == 'normal' else 0.5
+    font_size: 24
