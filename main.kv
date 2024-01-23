@@ -1,19 +1,25 @@
 #:kivy 2.1.0
 <HomeScreen>:
     CustomButton:
-        text: 'Start Playing'
+        text: 'Welcome to Threez!\n\nPress to start'
         background_color: 130/255, 200/255, 130/255, 1
         on_press: root.start_game()
 
 <ThreezScreen>:
+    threez_game: threez_game
+
     ThreezGame:
         id: threez_game
 
 <GameOverScreen>:
     CustomButton:
-        text: 'Go Home'
+        halign: 'center'
+
+        text: f'Game over\nYour score: {root.score} points'
         background_color: 140/255, 20/255, 1/255, 1
         on_press: root.to_home_screen()
+
+
 
 
 <ThreezGame>:
@@ -24,17 +30,26 @@
         id: header
         orientation: "vertical"
         size_hint: 1, None
-        size: -1, 200
+        size: -1, dp(100)
         BoxLayout:
             orientation: 'horizontal'
 
-            Label:
-                text: "Score: {:.0f}".format(root.score)
+            CustomButton:
+                text: "Quit"
+                size_hint: None, 1
+                size: dp(80), dp(100)
+                background_color: 140/255, 20/255, 1/255, 1
+                on_press: root.forfeit_popup.open()  
+            BoxLayout:
+                orientation: 'vertical'
 
-            Label:
-                text: "Hiscore: {:.0f}".format(max(root.score, root.hiscore))
+                CustomLabel:
+                    text: "Score: {:.0f}".format(root.score)
 
-        Label:
+                CustomLabel:
+                    text: "Hiscore: {:.0f}".format(max(root.score, root.hiscore))
+
+        CustomLabel:
             text: "Time remaining: {:.0f}".format(root.time)
 
     BoxLayout:
@@ -62,7 +77,7 @@
         id: footer
         orientation: "horizontal"
         size_hint: 1, None
-        size: -1, 300
+        size: -1, dp(100)
 
         CustomButton:
             text: 'Hint'
@@ -92,5 +107,44 @@
     background_down: ""
     opacity: 1.0 if self.state == 'normal' else 0.5
 
+    halign: 'center'
+
+    text_size: self.width, None
+    size_hint: 1, 1,
+    height: self.texture_size[1]
+
+
+
 <Label>:
-    font_size: 60
+    font_size: '20sp'
+
+<CustomLabel@Label>:
+    background_color: 100/255, 100/255, 100/255, 1
+    canvas.before:
+        Color:
+            rgba: self.background_color
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+<ForfeitPopup>:
+    auto_dismiss: True
+    size_hint: 0.8, None
+    size: -1, dp(150)
+    title: 'End the game now?'
+    title_size: '25sp'
+
+    BoxLayout:
+        orientation: 'horizontal'
+
+        Button:
+            size_hint: 0.95, 0.95
+            text: 'yes'
+            on_press: 
+                root.dismiss()
+                app.main_screen.threez_game.game_over()
+                
+        Button:
+            size_hint: 0.95, 0.95
+            text: 'no'
+            on_press: root.dismiss()

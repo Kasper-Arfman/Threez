@@ -2,25 +2,27 @@ import json
 import os
 import random
 from itertools import combinations, product
+# import kivy
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.config import Config
-from kivy.properties import NumericProperty, BooleanProperty
+from kivy.properties import NumericProperty, BooleanProperty, ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.uix.togglebutton import ToggleButton
+from kivy.uix.popup import Popup
+# from kivy.uix.button import Button
 
 # Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 # Config.set('graphics', 'width', '327')
 # Config.set('graphics', 'height', '720')
 # Config.set('graphics', 'resizable', False)
 
-here = os.path.dirname(os.path.realpath(__file__))
-print(here)
-
-CARD_PATH = os.path.join(here, 'images', 'card_{}.png')
-# CARD_PATH = 'images/card_{}.png'
-GAME_TIME = 300  # [seconds]
+ROOT = os.path.dirname(os.path.realpath(__file__))
+IMAGES = os.path.join(ROOT, 'images')
+DATA = os.path.join(ROOT, 'data')
+CARD_PATH = os.path.join(IMAGES, 'card_{}.png')
+GAME_TIME = 180  # [seconds]
          
 class Deck(list):   
     VALUES = [1, 2, 3]
@@ -75,11 +77,17 @@ class Tile(ToggleButton):
         
 
 class MainApp(App):
-    def build(self):
+    icon = os.path.join(DATA, 'icon.png')
+    
+    def build(self): 
+        self.home_screen = HomeScreen(name='home')
+        self.main_screen = ThreezScreen(name='main')
+        self.game_over_screen = GameOverScreen(name='game_over')
+        
         sm = ScreenManager()
-        sm.add_widget(HomeScreen(name='home'))
-        sm.add_widget(ThreezScreen(name='main'))
-        sm.add_widget(GameOverScreen(name='game_over'))
+        sm.add_widget(self.home_screen)
+        sm.add_widget(self.main_screen)
+        sm.add_widget(self.game_over_screen)
         sm.current = 'home'
         return sm
     
@@ -92,13 +100,22 @@ class HomeScreen(Screen):
     
     
 class ThreezScreen(Screen):
+    threez_game: object
+    
     def to_game_over_screen(self):
         self.parent.current = "game_over"
     
+class GameOverScreen(Screen): 
+    score = NumericProperty(-1)
     
-class GameOverScreen(Screen):    
     def to_home_screen(self):
         self.parent.current = "home"
+    
+    def on_enter(self):
+        main_screen = self.manager.get_screen("main")
+        threez_game = main_screen.threez_game
+        self.score = threez_game.score
+
   
         
 class ThreezGame(BoxLayout):
@@ -109,10 +126,13 @@ class ThreezGame(BoxLayout):
     hiscore = NumericProperty(0)
     time = NumericProperty(GAME_TIME)
     
+    forfeit_popup: object
+    
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         with open("set.json", 'r') as f:
             self.db = json.load(f)
+        self.forfeit_popup = ForfeitPopup()
        
     @property  
     def selected(self):
@@ -139,14 +159,15 @@ class ThreezGame(BoxLayout):
             self.replace_cards(self.selected)
         else:
             self.score -= self.FALSE_ENTRY_PENALTY
-        self.deselect_all()   
- 
-    def game_over(self):
+        self.deselect_all() 
+        
+    def game_over(self, *args):
         Clock.unschedule(self.update_timer)
         self.hiscore = max(self.score, self.hiscore)
         self.db['hiscore'] = self.hiscore
         with open('set.json', 'w') as file:
             json.dump(self.db, file, indent=4)
+        self.forfeit_popup.dismiss()
         self.parent.to_game_over_screen()
     
     def hint(self):
@@ -196,6 +217,11 @@ class ThreezGame(BoxLayout):
         self.time -= dt
         if self.time < 0:
             self.game_over()
+            
+            
+class ForfeitPopup(Popup): pass
+            
+            
 
 if __name__ == '__main__':
     MainApp().run()
