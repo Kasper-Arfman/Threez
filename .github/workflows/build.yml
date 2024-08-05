@@ -23,7 +23,18 @@ jobs:
       - name: Build APK
         run: |
           export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
-          yes | buildozer -v android debug
+
+          # Verify Java
+          export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
+          export PATH=$JAVA_HOME/bin:$PATH
+          echo "JAVA_HOME is set to: $JAVA_HOME"
+          java -version
+          javac -version
+          ls /usr/lib/jvm
+          printenv | grep JAVA_HOME
+
+
+          # yes | buildozer -v android debug
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
