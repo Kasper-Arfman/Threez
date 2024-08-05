@@ -13,16 +13,27 @@ from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.popup import Popup
 # from kivy.uix.button import Button
 
+from kivy.core.audio import SoundLoader
+from kivy.animation import Animation
+
 # Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
-# Config.set('graphics', 'width', '327')
-# Config.set('graphics', 'height', '720')
+Config.set('graphics', 'width', '327')
+Config.set('graphics', 'height', '720')
 # Config.set('graphics', 'resizable', False)
 
 ROOT = os.path.dirname(os.path.realpath(__file__))
 IMAGES = os.path.join(ROOT, 'images')
+ASSETS = os.path.join(ROOT, 'assets')
 DATA = os.path.join(ROOT, 'data')
 CARD_PATH = os.path.join(IMAGES, 'card_{}.png')
 GAME_TIME = 180  # [seconds]
+
+
+class Colours:
+    GREEN = (0.1, 0.8, 0.1, 1.0)
+    RED = (0.8, 0.1, 0.1, 1.0)
+
+
          
 class Deck(list):   
     VALUES = [1, 2, 3]
@@ -126,6 +137,8 @@ class ThreezGame(BoxLayout):
     hiscore = NumericProperty(0)
     time = NumericProperty(GAME_TIME)
     
+    
+    
     forfeit_popup: object
     
     def __init__(self, **kwargs):
@@ -133,6 +146,17 @@ class ThreezGame(BoxLayout):
         with open("set.json", 'r') as f:
             self.db = json.load(f)
         self.forfeit_popup = ForfeitPopup()
+        
+        self.sounds = {
+            'soundtrack': SoundLoader.load(os.path.join(ASSETS, 'ohyeah.wav')),
+            'correct': SoundLoader.load(os.path.join(ASSETS, 'correct.wav')),
+            'ohyeah': SoundLoader.load(os.path.join(ASSETS, 'ohyeah.wav')),
+            'wrong': SoundLoader.load(os.path.join(ASSETS, 'wrong.wav')),
+            'gameover': SoundLoader.load(os.path.join(ASSETS, 'gameover.wav')),
+            } 
+        # self.sounds['soundtrack'].loop = True
+        # self.sounds['soundtrack'].volume = 0.03
+        # self.sounds['soundtrack'].play()
        
     @property  
     def selected(self):
@@ -150,20 +174,49 @@ class ThreezGame(BoxLayout):
         for tile in self.selected:
             tile.toggle()
        
-    def enter(self):
-        if self.is_set(self.selected):
+    def enter(self, button=None):        
+        if not len(self.selected) == 3:  pass
+        
+        elif self.is_set(self.selected):
+            self.sounds['correct'].play()
+            self.flash_background(self, Colours.GREEN)
+            
             # determine how many points this set is worth
             points = sum([list(c.traits) for c in self.selected], [])
             points = len(set(points))
             self.score += points
             self.replace_cards(self.selected)
         else:
+            self.sounds['wrong'].play()
+            self.flash_background(self, Colours.RED)
             self.score -= self.FALSE_ENTRY_PENALTY
+            
         self.deselect_all() 
+        
+    def flash_background(self, widget, color, duration=0.15):
+        before = widget.background_color
+        an = Animation(background_color=color, duration=duration)
+        an += Animation(background_color=before, duration=duration)
+        an.start(widget)
+        return
+        
+        
+        
+        
         
     def game_over(self, *args):
         Clock.unschedule(self.update_timer)
-        self.hiscore = max(self.score, self.hiscore)
+        
+        self.sounds['soundtrack'].stop()
+        
+        # check for hiscore
+        if self.score > self.hiscore:
+            self.sounds['ohyeah'].play()
+            self.hiscore = self.score
+        else:
+            self.sounds['gameover'].play()
+        
+        # self.hiscore = max(self.score, self.hiscore)
         self.db['hiscore'] = self.hiscore
         with open('set.json', 'w') as file:
             json.dump(self.db, file, indent=4)

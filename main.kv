@@ -26,6 +26,8 @@
     id: mainscreen
     orientation: 'vertical'
 
+    background_color: (0.0, 0.0, 0.0, 1)
+
     BoxLayout:
         id: header
         orientation: "vertical"
@@ -53,7 +55,21 @@
             text: "Time remaining: {:.0f}".format(root.time)
 
     BoxLayout:
+
+
+        canvas:
+            Color:
+                rgba: root.background_color
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        # background_color: (1, 0, 0, 1)
+
         GridLayout:
+
+            # background_color: (0, 1, 0, 1)
+
             id: field
             card_aspect: 88/63
             cols: 4
@@ -92,7 +108,8 @@
         CustomButton:
             text: 'OK'
             background_color: 10/255, 204/255, 30/255, 1
-            on_press: root.enter()
+            on_press: 
+                root.enter(self)
 
 <Tile@ToggleButton>:
     # background_normal: ""
